@@ -13,6 +13,8 @@ from keras.layers.merge import Concatenate
 from keras import regularizers
 import keras
 from keras.models import load_model
+from geometry_msgs.msg import Twist, Pose
+from nav_msgs.msg import Odometry, Path
 
 class ROSModel():
     def __init__(self, name, ros_features, ros_targets, baseline_model):
@@ -137,13 +139,18 @@ class ROSModel():
             workers = workers,
             use_multiprocessing = use_multiprocessing)
 
+    def collectData(self, trainOnline = False):
+        new_data_collector = DataCollector(self)
+        # launch simulation stuff
+        new_data_collector.start()
+
 
 class ROSReading():
-    def __init__(self, name, rostopic, ros_message_type, customDataExtraction=None):
+    def __init__(self, name, rostopic, ros_message_type, custom_data_extraction=None):
         self.name = name
         self.rostopic = rostopic
         self.ros_message_type = ros_message_type
-        self.customDataExtraction = customDataExtraction
+        self.custom_data_extraction = custom_data_extraction
 
     def get_name(self):
         return self.name
@@ -157,17 +164,37 @@ class ROSReading():
 
     def set_rostopic(self, rostopic):
         self.rostopic = rostopic
-        print("ROSReading " + name + " rostopic changed to " + self.rostopic)
+        print("ROSReading " + self.name + " rostopic changed to " + self.rostopic)
 
     def get_ros_message_type(self):
         return self.ros_message_type
 
     def set_ros_message_type(self, ros_message_type):
         self.ros_message_type = ros_message_type
-        print("ROSReading " + name + " message type changed")
+        print("ROSReading " + self.name + " message type changed")
 
-    def getCustomDataCalculation(self):
-        return self.customDataCalculation
+    def get_custom_data_extraction(self):
+        return self.customDataExtraction
 
-    def dataExtraction(self, receivedData):
-        
+    def set_custom_data_extraction(self, new_data_extraction):
+        self.custom_data_extraction = new_data_extraction
+        print("ROSReading " + self.name + " data extraction method changed")
+
+    def dataExtraction(self, received_data):
+        data = []
+        if self.custom_data_extraction is not None:
+            return self.custom_data_extraction(received_data)
+        else:
+            if isinstance(self.ros_message_type, Twist):
+                for vel in received_data.linear:
+                    data.append(vel)
+                for vel in received_data.angular:
+                    data.append(vel)
+            elif isinstance(self.ros_message_type, Pose):
+                data.append(received_data.x)
+                data.append(received_data.y)
+                data.append(received_data.theta)
+            else:
+                print("Error: " + self.name + " is unrecognized message type")
+                print("Please write a custom extraction method")
+

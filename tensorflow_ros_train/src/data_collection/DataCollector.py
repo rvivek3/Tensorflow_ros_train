@@ -19,6 +19,8 @@ class DataCollector():
     def csv_logger(self, *arg):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         csv_dir = dir_path + "/" + self.ros_model.getName() + "_data"
+
+        #Create new csv if it doesn't already exist
         if not os.path.exists(csv_dir):
             with open(csv_dir, "w") as fd:
                 print("Creating New CSV")
@@ -26,12 +28,22 @@ class DataCollector():
                 writer = csv.writer(fd)
                 writer.writerow(first_row)
 
-                with open('/media/rajan/easystore/ORS_DATA/laser.csv', "a") as fd:
+                # Log new data
+                with open(csv_dir, "a") as fd:
                     new_row = []
                     current_time = time.time()
                     elapsed = current_time - self.startTime
                     new_row.append(elapsed)
 
+                    #Extract the data from each message
+
+                    for index, ros_reading in enumerate(self.data_to_collect):
+                        extracted_data = ros_reading.dataExtraction(arg[index])
+                        new_row += extracted_data
+
+                    #Write the data to the csv
+                    writer = csv.writer(fd)
+                    writer.writerow(new_row)
 
 
     def listener(self):
@@ -50,10 +62,10 @@ class DataCollector():
     def start(self):
         if __name__ == '__main__':
             rospy.init_node(self.name, anonymous=False)
-            tf_listener = tf.TransformListener()
-
             while (True):
                 try:
-                    listener()
+                    self.listener()
                 except:
                     print("Data collection error. Is ROS Master Running?")
+                    print("Trying again in 5 seconds")
+                    time.sleep(5)
