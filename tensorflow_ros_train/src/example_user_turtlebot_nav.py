@@ -59,9 +59,9 @@ targets = ['Forward(0), Left(1), or Right(2)']
 
 
 myModel = ROSModel("Turtlebot_steering_controller",
+				   baseline_model,
 				   features,
-				   targets,
-				   baseline_model);
+				   targets);
 myModel.summary()
 #print(myModel.get_features())
 collectedData = '/media/rajan/easystore/ORS_DATA/dat4mod.csv'

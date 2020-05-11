@@ -13,19 +13,32 @@ from keras.layers.merge import Concatenate
 from keras import regularizers
 import keras
 from keras.models import load_model
-from geometry_msgs.msg import Twist, Pose
+from geometry_msgs.msg import Twist
+from turtlesim.msg import Pose
 from nav_msgs.msg import Odometry, Path
 from .DataCollector import *
 
 
 class ROSModel():
-    def __init__(self, name, ros_features, ros_targets, baseline_model):
+    def __init__(self, name, baseline_model, ros_features = None, ros_targets = None):
         self.name = name
         self.model = baseline_model()
         self.baseline_model = baseline_model
         self.features = ros_features
         self.targets = ros_targets
+
+        if self.features is not None and self.targets is not None:
+            self.data_collector = DataCollector(self)
+        else:
+            self.data_collector = None
+
         print(name + " Model Created")
+
+
+
+
+    def initialize_data_collector(self):
+        self.data_collector = DataCollector(self)
 
     def get_name(self):
         return self.name
@@ -39,21 +52,21 @@ class ROSModel():
 
     def set_features(self, ros_features):
         self.features = ros_features
-        print("Features of " + self.name + "set")
+        print("Features of " + self.name + " set")
 
     def get_targets(self):
         return self.targets;
 
     def set_targets(self, ros_targets):
         self.targets = ros_targets
-        print("Targets of " + self.name + "set")
+        print("Targets of " + self.name + " set")
 
     def get_baseline_model(self):
         return self.baseline_model
 
     def set_baseline_model(self, baseline_model):
         self.baseline_model = baseline_model
-        print("Baseline Model of " + self.name + "set")
+        print("Baseline Model of " + self.name + " set")
 
     def summary(self):
         print("Summary of " + self.name)
@@ -141,18 +154,20 @@ class ROSModel():
             workers = workers,
             use_multiprocessing = use_multiprocessing)
 
-    def collectData(self, trainOnline = False):
-        new_data_collector = DataCollector(self)
+    def collectData(self, train_online = False):
         # launch simulation stuff
-        new_data_collector.start()
+        self.data_collector.start()
 
 
 class ROSReading():
-    def __init__(self, name, rostopic, ros_message_type, custom_data_extraction=None):
+    def __init__(self, name, description, rostopic, ros_message_type, custom_handler = None,
+                 custom_data_extraction=None):
         self.name = name
+        self.description = description
         self.rostopic = rostopic
         self.ros_message_type = ros_message_type
         self.custom_data_extraction = custom_data_extraction
+        self.custom_handler = custom_handler
 
     def get_name(self):
         return self.name
@@ -160,6 +175,13 @@ class ROSReading():
     def set_name(self, name):
         self.name = name
         print("ROSReading name changed to " + self.name)
+
+    def get_description(self):
+        return self.description
+
+    def set_name(self, description):
+        self.description = description
+        print("ROSReading description changed to " + self.description)
 
     def get_rostopic(self):
         return self.rostopic
@@ -176,26 +198,27 @@ class ROSReading():
         print("ROSReading " + self.name + " message type changed")
 
     def get_custom_data_extraction(self):
-        return self.customDataExtraction
+        return self.custom_data_extraction
 
     def set_custom_data_extraction(self, new_data_extraction):
         self.custom_data_extraction = new_data_extraction
         print("ROSReading " + self.name + " data extraction method changed")
 
-    def dataExtraction(self, received_data):
+    def data_extraction(self, received_data):
         data = []
         if self.custom_data_extraction is not None:
             return self.custom_data_extraction(received_data)
         else:
-            if isinstance(self.ros_message_type, Twist):
-                for vel in received_data.linear:
-                    data.append(vel)
-                for vel in received_data.angular:
-                    data.append(vel)
-            elif isinstance(self.ros_message_type, Pose):
+            if self.ros_message_type == Twist:
+                data.append(received_data.linear.x)
+                data.append(received_data.linear.y)
+                data.append(received_data.linear.z)
+                return data
+            elif self.ros_message_type == Pose:
                 data.append(received_data.x)
                 data.append(received_data.y)
                 data.append(received_data.theta)
+                return data
             else:
                 print("Error: " + self.name + " is unrecognized message type")
                 print("Please write a custom extraction method")
