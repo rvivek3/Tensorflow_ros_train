@@ -82,23 +82,33 @@ class ROSModel():
 
         # Get validation data if separate
         if validation_data is not None:
+            print("not None??")
             validation_df = pd.read_csv(validation_data)
 
         # Extract features and targets
         feature_names = []
         target_names = []
-        for feature in self.features:
-            feature_names.append(feature.getName())
 
-        for target in self.targets:
-            target_names.append(target.getName())
+        #Check if user gave features and targets as strings or ROSReadings (assume user only did one or other)
 
-        selected_features = training_df.drop(target_names)
-        selected_targets = training_df.drop(feature_names)
+        if isinstance(self.features[0], str):
+            print("Features and Targets provided as Strings")
+            feature_names = self.features
+            target_names = self.targets
+        else:
+            for feature in self.features:
+                feature_names.append(feature.getName())
+
+            for target in self.targets:
+                target_names.append(target.getName())
+
+        selected_features = training_df[feature_names]
+        selected_targets = training_df[target_names]
 
         if validation_data is not None:
-            validation_features = validation_df.drop(target_names)
-            validation_targets = validation_df.drop(feature_names)
+            validation_features = validation_df[feature_names]
+            validation_targets = validation_df[target_names]
+            validation_data = ((validation_features, validation_targets))
 
         # Perform custom processing if needed
         if custom_feature_processing is not None:
@@ -107,25 +117,25 @@ class ROSModel():
             selected_targets = custom_target_processing(selected_targets)
 
         #Fit the model
-        self.model.fit(selected_features,
-            selected_targets,
-            batch_size,
-            epochs,
-            verbose,
-            callbacks,
-            validation_split,
-            (validation_features,validation_targets) if validation_data is not None else None,
-            shuffle,
-            class_weight,
-            sample_weight,
-            initial_epoch,
-            steps_per_epoch,
-            validation_steps,
-            validation_batch_size,
-            validation_freq,
-            max_queue_size,
-            workers,
-            use_multiprocessing)
+        #self.model.fit(selected_features, selected_targets, validation_split = validation_split, verbose = verbose)
+        self.model.fit(x = selected_features,
+            y = selected_targets,
+            batch_size = batch_size,
+            epochs = epochs,
+            verbose = verbose,
+            callbacks = callbacks,
+            validation_split = validation_split,
+            validation_data = validation_data,
+            shuffle = shuffle,
+            class_weight = class_weight,
+            sample_weight = sample_weight,
+            initial_epoch = initial_epoch,
+            steps_per_epoch = steps_per_epoch,
+            validation_steps = validation_steps,
+            validation_freq = validation_freq,
+            max_queue_size = max_queue_size,
+            workers = workers,
+            use_multiprocessing = use_multiprocessing)
 
 
 

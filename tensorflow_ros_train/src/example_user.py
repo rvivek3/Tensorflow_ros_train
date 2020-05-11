@@ -32,20 +32,12 @@ def baseline_model():
                        use_bias=not bn)(conv4))
 	concat2 = Concatenate(axis=-2)([conv3, conv5])
 	relu2 = ReLU(max_value=None, negative_slope=0.0, threshold=0.0)(concat2)
-
 	avg_pool = AveragePooling1D(pool_size=3, strides=None, padding='valid', data_format='channels_last')(relu2)
 	avg_pool = Reshape(target_shape=(-1, 1))(avg_pool)
-	#dropOut2 = Dropout(.25)(avg_pool)
-	#flatten = Flatten()(conv5)
-	# print(type(flatten))
-	# # #print(model.summary())
 	primary = Concatenate(axis=-2)([angDevStream, avg_pool])
 	primary = Flatten()(primary)
-	# # print(primary)
 	primaryHidden = Dense(units = 1024, activation='relu')(primary)
-	#do3 = Dropout(.4)(primaryHidden)
 	primaryHidden2 = Dense(units = 512, activation='relu')(primaryHidden)
-	#do4 = Dropout(.4)(primaryHidden2)
 	primaryHidden3 = Dense(units = 256, activation = 'relu')(primaryHidden2)
 	finalOut = Dense(units=3, activation = 'softmax')(primaryHidden3)
 	model = Model(inpTensor,finalOut)
@@ -54,11 +46,41 @@ def baseline_model():
 	sgd = optimizers.SGD(lr=0.00001, momentum=0.0, nesterov=False)
 	adam = keras.optimizers.Adam(lr=0.001)
 	model.compile(loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True), optimizer=adam, metrics=['accuracy'])
-	# optimizer could be "adam"
 	return model
 
-myModel = ROSModel("Turtlebot_steering_controller",['feature1','feature2'],['target1','target2'],baseline_model);
+
+features = []
+features.append("Ang Dev (straight line to goal)")
+for i in range(1, 641):
+	features.append("Distance " + str(i))
+targets = ['Forward(0), Left(1), or Right(2)']
+
+
+myModel = ROSModel("Turtlebot_steering_controller",
+				   features,
+				   targets,
+				   baseline_model);
 myModel.summary()
 #print(myModel.get_features())
 collectedData = '/media/rajan/easystore/ORS_DATA/dat4mod.csv'
-myModel.fit(collectedData, epochs = 2)
+
+def processFeatures(features):
+	for (columnName, columnData) in features.iteritems():
+		if "Ang" not in columnName:
+			features[columnName] = features[columnName].where(features[columnName] != 10, features[columnName] - 4)
+			features[columnName] = features[columnName] / 6
+
+		else:
+			features[columnName] /= 3.14
+	return features
+
+def processTargets(targets):
+	targets = np_utils.to_categorical(targets)
+	return targets
+
+myModel.fit(collectedData,
+			epochs = 2,
+			custom_feature_processing=processFeatures,
+			custom_target_processing=processTargets,
+			validation_split=.2,
+			verbose=2)
