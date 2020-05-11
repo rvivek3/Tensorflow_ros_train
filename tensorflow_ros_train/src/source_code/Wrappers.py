@@ -1,3 +1,4 @@
+import subprocess
 import warnings
 warnings.filterwarnings("ignore")
 import numpy as np
@@ -15,9 +16,12 @@ import keras
 from keras.models import load_model
 from geometry_msgs.msg import Twist
 from turtlesim.msg import Pose
+import turtlesim
 from nav_msgs.msg import Odometry, Path
 from .DataCollector import *
-
+from .task_manager import *
+import random
+import rospy
 
 class ROSModel():
     def __init__(self, name, baseline_model, ros_features = None, ros_targets = None):
@@ -223,3 +227,52 @@ class ROSReading():
                 print("Error: " + self.name + " is unrecognized message type")
                 print("Please write a custom extraction method")
 
+class ROSTask():
+    def __init__(self, name, simulation_type, goal):
+        self.name = name
+        self.simulation_type = simulation_type
+        self.goal = Pose()
+        if goal == "random_goal":
+            self.goal.x = random.uniform(0,10)
+            self.goal.y = random.uniform(0,10)
+        else:
+            self.goal.x = goal[0]
+            self.goal.y = goal[1]
+
+    def start_simulation(self):
+        turtle = TurtleBot()
+        if self.simulation_type == "Turtlesim":
+            sim_launch_cmd = "rosrun turtlesim turtlesim_node"
+            self.launch = subprocess.Popen(sim_launch_cmd.split(), stdout=subprocess.PIPE,
+                             stdin=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        return turtle
+
+    def run(self, turtle):
+        if self.simulation_type == "Turtlesim":
+            rospy.wait_for_service('clear')
+            rospy.wait_for_service('spawn')
+            rospy.wait_for_service('kill')
+
+            sim_clear_cmd = "rosservice call /clear"
+            sim_spawn_cmd = "rosservice call /spawn " + str(self.goal.x) + " " + str(self.goal.y) + " 0 turtle2"
+            sim_kill_cmd = "rosservice call /kill turtle2"
+            self.clear = subprocess.Popen(sim_clear_cmd.split(), stdout=subprocess.PIPE,
+                             stdin=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+            self.clear.kill()
+
+            # self.kill = subprocess.Popen(sim_kill_cmd.split(), stdout=subprocess.PIPE,
+            #                  stdin=subprocess.PIPE,
+            #                  stderr=subprocess.PIPE)
+            # self.kill.kill()
+            self.spawn = subprocess.Popen(sim_spawn_cmd.split(), stdout=subprocess.PIPE,
+                             stdin=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+            #self.spawn.kill()
+            time.sleep(1)
+            turtle.move2goal(self.goal)
+            time.sleep(4)
+            self.spawn.kill()
+        elif self.simulation_type == "Gazebo":
+            print("Gazebo Functionality has not been implemented yet")

@@ -1,5 +1,6 @@
 from source_code.Wrappers import *
 from source_code.DataCollector import *
+from source_code.task_manager import *
 import time
 
 def baseline_model():
@@ -45,7 +46,13 @@ myModel.set_targets(targets)
 #Data collector must be iniialized each time features and targets are set
 myModel.initialize_data_collector()
 
-myModel.collectData()
+myTask = ROSTask("Turtle_to_goal", "Turtlesim", "random_goal")
+myTask2 = ROSTask("Turtle_to_goal", "Turtlesim", "random_goal")
+turtle = myTask.start_simulation()
+myTask.run(turtle)
+time.sleep(5)
+myTask2.run()
+#myModel.collectData()
 
 while(True):
     time.sleep(.1)
