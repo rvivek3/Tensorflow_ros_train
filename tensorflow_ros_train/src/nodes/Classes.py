@@ -52,7 +52,7 @@ class ROSModel():
         print("Baseline Model of " + self.name + "set")
 
     def summary(self):
-        print("Summary of" + self.name)
+        print("Summary of " + self.name)
         return self.model.summary()
 
     def fit(self,
@@ -138,4 +138,36 @@ class ROSModel():
             use_multiprocessing = use_multiprocessing)
 
 
+class ROSReading():
+    def __init__(self, name, rostopic, ros_message_type, customDataExtraction=None):
+        self.name = name
+        self.rostopic = rostopic
+        self.ros_message_type = ros_message_type
+        self.customDataExtraction = customDataExtraction
 
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+        print("ROSReading name changed to " + self.name)
+
+    def get_rostopic(self):
+        return self.rostopic
+
+    def set_rostopic(self, rostopic):
+        self.rostopic = rostopic
+        print("ROSReading " + name + " rostopic changed to " + self.rostopic)
+
+    def get_ros_message_type(self):
+        return self.ros_message_type
+
+    def set_ros_message_type(self, ros_message_type):
+        self.ros_message_type = ros_message_type
+        print("ROSReading " + name + " message type changed")
+
+    def getCustomDataCalculation(self):
+        return self.customDataCalculation
+
+    def dataExtraction(self, receivedData):
+        
