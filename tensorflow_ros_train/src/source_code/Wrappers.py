@@ -15,6 +15,8 @@ import keras
 from keras.models import load_model
 from geometry_msgs.msg import Twist, Pose
 from nav_msgs.msg import Odometry, Path
+from .DataCollector import *
+
 
 class ROSModel():
     def __init__(self, name, ros_features, ros_targets, baseline_model):

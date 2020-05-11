@@ -1,4 +1,6 @@
-from nodes.Classes import *
+from source_code.Wrappers import *
+from source_code.DataCollector import *
+
 
 def baseline_model():
 	bn = False
@@ -79,7 +81,7 @@ def processTargets(targets):
 	return targets
 
 myModel.fit(collectedData,
-			epochs = 2,
+			epochs = 1,
 			custom_feature_processing=processFeatures,
 			custom_target_processing=processTargets,
 			validation_split=.2,
