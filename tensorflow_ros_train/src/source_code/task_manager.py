@@ -3,7 +3,8 @@ from geometry_msgs.msg import Twist
 from turtlesim.msg import Pose
 from math import pow, atan2, sqrt
 
-
+# This code was obtained from http://wiki.ros.org/turtlesim/Tutorials/Go%20to%20Goal
+#It is used solely as an example of a controller being implemented in the package
 class TurtleBot:
 
     def __init__(self):
@@ -79,8 +80,8 @@ class TurtleBot:
         vel_msg.linear.x = 0
         vel_msg.angular.z = 0
         self.velocity_publisher.publish(vel_msg)
+        return
 
 
-        # If we press control + C, the node will stop.
-        rospy.spin()
+
 

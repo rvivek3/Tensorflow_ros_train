@@ -158,9 +158,16 @@ class ROSModel():
             workers = workers,
             use_multiprocessing = use_multiprocessing)
 
-    def collectData(self, train_online = False):
-        # launch simulation stuff
+    def collectData(self, num_trials, simulation, train_online = False):
+        if simulation == "Turtlesim":
+            myTask = ROSTask("Turtle_to_goal", "Turtlesim", "random_goal")
+            turtle = myTask.start_simulation()
+            myTask.run(turtle)
+            for i in range(num_trials):
+                ROSTask("Turtle_to_goal", "Turtlesim", "random_goal").run(turtle)
+
         self.data_collector.start()
+
 
 
 class ROSReading():
@@ -262,17 +269,10 @@ class ROSTask():
                              stderr=subprocess.PIPE)
             self.clear.kill()
 
-            # self.kill = subprocess.Popen(sim_kill_cmd.split(), stdout=subprocess.PIPE,
-            #                  stdin=subprocess.PIPE,
-            #                  stderr=subprocess.PIPE)
-            # self.kill.kill()
-            self.spawn = subprocess.Popen(sim_spawn_cmd.split(), stdout=subprocess.PIPE,
-                             stdin=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-            #self.spawn.kill()
+
             time.sleep(1)
             turtle.move2goal(self.goal)
-            time.sleep(4)
-            self.spawn.kill()
+            time.sleep(2)
+
         elif self.simulation_type == "Gazebo":
             print("Gazebo Functionality has not been implemented yet")
