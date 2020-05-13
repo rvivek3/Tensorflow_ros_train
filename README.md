@@ -1,5 +1,6 @@
 # tensorflow_ros_train
-ROS package development for streamlining tensorflow 2 model training using ROS data. Tensorflow models can be seamlessly integrated in ROS.
+This ROS package is designed to streamline tensorflow 2 model training using ROS data. Tensorflow models can be seamlessly integrated in ROS.
+
 See overview at https://www.youtube.com/watch?v=rslBpMuezN8
 
 The package currently supports TurtleSim, though support for more simulation packages including Gazebo and stdr_simulator are coming.
@@ -28,7 +29,7 @@ turtle_vel = ROSReading([“Linear_x”, “Linear_y”, “Linear_z”], “tur
 
 myModel = ROSModel(“Turtlesim_controller”, baseline_model, features = [turtle_pose], targets = [turtle_vel])
 ```
-## Auto-collect data using an separate simulation launcher. 
+## Auto-collect data using a separate simulation launcher. 
 ### A csv is automatically generated containing the model's required features and targets.
 ```
 myModel.collectData( )
@@ -81,9 +82,9 @@ myModel.model.[any tensorflow or keras method]
 ## Check out the two example user scripts:
 
 ### example_user_turtlesim_nav.py:
-Very similar to above example. Only difference is that handler functions are necessary (passed to the ROSReadings) because ApproximateTimeSynchronizer in ROS does not work with Python 3, so a workaround is used. The release of ROS Noetic will make these functions obsolete.
+Very similar to example code shown previously. Only difference is that handler functions are necessary (passed to the ROSReadings) because ApproximateTimeSynchronizer in ROS does not work with Python 3, so a workaround is used. The release of ROS Noetic will make these functions obsolete.
 
-### example_user_turtlebot_sim.py
+### example_user_turtlebot_nav.py
 Uses precollected data from simulations of a turtlebot navigating to a random goal in a Gazebo simulation using a DWA controller. Ultimately, the functionality for collecting this data will be included in this package.
 
 The user specifies a custom tensforflow model to map turtlebot laser scan messages and angular deviation to the goal to steering commands for the turtlebot.
@@ -92,7 +93,7 @@ Because data collection was performed externally, the user specifies features an
 
 The user uses custom target and feature processing for data normalization
 
-The user then fits the model using only a reference to the collected data. In 30 epochs, the model is able to reach a 70% test accuracy and 57% validation accuracy.
+The user then fits the model using only a reference to the csv. In 30 epochs, the model is able to reach a 70% test accuracy and 57% validation accuracy.
 
 
 
