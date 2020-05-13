@@ -1,5 +1,7 @@
 # tensorflow_ros_train
-This ROS package is designed to streamline tensorflow 2 model training using ROS data. Tensorflow models can be seamlessly integrated in ROS.
+This ROS package is designed to seamlessly integrate Tensorflow 2 models in ROS. Convenient methods allow rapid ROS data collection and model training on this data.
+
+I searched but could not find any existing ROS packages that offer this level of integration and flexibility for the user's own models. This package is fundamentally different from tensorflow_ros_cpp (which helps with dependencies to run tensorflow and ros code in the same file), openai_ros (which integrates reinforcement learning), and many existing tutorial packages that integrate only a specific model into ROS. With this package, a user can create any model that uses ROS data as inputs, collect data, and fit the model to this data-- all in only several lines of code.
 
 See overview at https://www.youtube.com/watch?v=rslBpMuezN8
 
